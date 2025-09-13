@@ -1,0 +1,19 @@
+{
+  "version": 1,
+  "updatedAt": "2025-09-13T20:41:39.604Z",
+  "rules": [
+    {
+      "id": "base-1",
+      "name": "Restaurantes",
+      "category": "dining",
+      "keywords": [
+        "\\brestaurante(s)?\\b",
+        "propina"
+      ],
+      "match": "any",
+      "enabled": true,
+      "priority": 7,
+      "matchMode": "regex"
+    }
+  ]
+}

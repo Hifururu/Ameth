@@ -1,0 +1,7 @@
+﻿node_modules/
+.env
+secrets/
+logs/
+backups/
+*.log
+*.zip
