@@ -73,3 +73,6 @@ router.get("/import", async (req, res) => {
 });
 
 module.exports = router;
+router.get("/ping", (req, res) => {
+  res.json({ ok: true, route: "/gmail/ping" });
+});
