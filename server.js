@@ -2,7 +2,7 @@
 const bodyParser = require("body-parser");
 const apiKey = require("./src/lib/apiKey");
 
-const financeRoutes = require("./src/routes/finance.demo");
+const financeRoutes = require("./src/routes/finance");
 const gmailRoutes   = require("./src/routes/gmail");       // ✅ usa el nuevo router
 const rulesRoutes   = require("./src/routes/rules");
 const categorizeRoutes = require("./src/routes/categorize");
