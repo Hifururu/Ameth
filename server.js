@@ -3,7 +3,7 @@ const bodyParser = require("body-parser");
 const apiKey = require("./src/lib/apiKey");
 
 const financeRoutes = require("./src/routes/finance.demo");
-const gmailRoutes = require("./src/routes/gmail.demo");
+const gmailRoutes = require("./src/routes/gmail");
 const rulesRoutes = require("./src/routes/rules");
 const categorizeRoutes = require("./src/routes/categorize");
 const oauthRoutes = require("./src/routes/oauth");
