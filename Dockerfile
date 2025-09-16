@@ -1,19 +1,19 @@
-﻿# ---- build stage ----
-FROM node:20-alpine AS build
+﻿# Usa Node 20
+FROM node:20-alpine
+
+# Carpeta de trabajo
 WORKDIR /app
-COPY package*.json ./
-RUN npm ci --only=production
+
+# Copia package.json e instala dependencias
+COPY package.json ./
+RUN npm install --omit=dev
+
+# Copia el código
 COPY . .
 
-# ---- runtime stage ----
-FROM node:20-alpine
-WORKDIR /app
-ENV NODE_ENV=production
-ENV RULES_DIR=/data
-ENV RULES_PATH=/data/rules.store.json
+# Puerto expuesto (Northflank mapea este)
+ENV PORT=8080
+EXPOSE 8080
 
-# Copia código y dependencias desde la build stage
-COPY --from=build /app /app
-
-EXPOSE 3000
-CMD ["node","server.js"]
+# Arranque
+CMD ["npm", "start"]
