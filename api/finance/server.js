@@ -1,19 +1,25 @@
-﻿import express from "express";
+// api/finance/server.js
+// ESM (package.json tiene "type": "module")
+
+import express from "express";
 
 const app = express();
 const PORT = process.env.PORT || 3000;
 
+// === CONFIG ===
+// URL de tu Web App de Google (Kyaru)
+const KYARU_WEBAPP_URL = "https://script.google.com/macros/s/AKfycbyOpIdgQV-gutLG_TimogW9pbOHN8U_eS8FwBfFrnRrMkJNf1yL0OtDyHAN5pXfUyZv/exec";
+
+// Middleware
 app.use(express.json());
 
-// === CONFIG ===
-// Pega aquí tu Web App URL de Google Apps Script cuando la tengas.
-// Si la dejas vacía, igual funcionará en "modo demo" sin registrar en Google.
-const KYARU_WEBAPP_URL = "https://script.google.com/macros/s/AKfycbyOpIdgQV-gutLG_TimogW9pbOHN8U_eS8FwBfFrnRrMkJNf1yL0OtDyHAN5pXfUyZv/exec"; // ej: "https://script.google.com/macros/s/XXXXX/exec"
+// Util: formatear montos
+const nfCL = new Intl.NumberFormat("es-CL");
 
-// --- Salud ---
+// -------------------- Salud --------------------
 app.get("/health", (_req, res) => res.status(200).send("ok"));
 
-// --- Finance: TODAY (mock) ---
+// -------------------- Finance: TODAY (mock) --------------------
 app.get("/api/finance/today", (_req, res) => {
   res.status(200).json({
     date: "2025-09-15",
@@ -64,7 +70,7 @@ app.get("/api/finance/today", (_req, res) => {
   });
 });
 
-// --- Finance: YESTERDAY (mock) ---
+// -------------------- Finance: YESTERDAY (mock) --------------------
 app.get("/api/finance/yesterday", (_req, res) => {
   res.status(200).json({
     date: "2025-09-14",
@@ -115,9 +121,8 @@ app.get("/api/finance/yesterday", (_req, res) => {
   });
 });
 
-// ===== Kyaru helpers (usan fetch global de Node 20) =====
+// ====================== Kyaru helpers ======================
 async function kyaruGetBalance() {
-  if (!KYARU_WEBAPP_URL) return null;
   try {
     const r = await fetch(KYARU_WEBAPP_URL);
     const data = await r.json();
@@ -127,62 +132,74 @@ async function kyaruGetBalance() {
   }
 }
 
-async function kyaruPlanExpense({ description, amount, currency = "CLP" }) {
-  if (!KYARU_WEBAPP_URL) {
-    // Modo demo: no persiste, solo simula OK
-    return { ok: true, demo: true };
-  }
+// Enviar plan a Kyaru (con type IN/OUT)
+async function kyaruPlanExpense({ description, amount, currency = "CLP", type = "OUT" }) {
   const r = await fetch(KYARU_WEBAPP_URL, {
     method: "POST",
     headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ description, amount, currency })
+    body: JSON.stringify({ description, amount, currency, type })
   });
-  try { return await r.json(); } catch { return { ok:false, error:"No JSON" }; }
+  return r.json().catch(() => ({}));
 }
 
-// --- Kyaru: registrar gasto planificado ---
+// -------------------- /api/kyaru/plan --------------------
 app.post("/api/kyaru/plan", async (req, res) => {
   try {
-    const { description, amount, currency = "CLP" } = req.body || {};
-    if (!description || !amount) return res.status(400).json({ ok:false, error:"description y amount requeridos" });
-    const planResult = await kyaruPlanExpense({ description, amount: Number(amount), currency });
+    const { description, amount, currency = "CLP", type = "OUT" } = req.body || {};
+    if (!description || !amount) {
+      return res.status(400).json({ ok: false, error: "description y amount requeridos" });
+    }
+    const planResult = await kyaruPlanExpense({
+      description,
+      amount: Number(amount),
+      currency,
+      type: String(type || "OUT").toUpperCase()
+    });
     const balance = await kyaruGetBalance();
-    res.status(200).json({ ok:true, planResult, balance });
+    res.status(200).json({ ok: true, planResult, balance });
   } catch (e) {
-    res.status(500).json({ ok:false, error:String(e) });
+    res.status(500).json({ ok: false, error: String(e) });
   }
 });
 
-// --- Kyaru: chat simple (sin OpenAI por ahora) ---
+// -------------------- /api/kyaru/chat --------------------
 app.post("/api/kyaru/chat", async (req, res) => {
   try {
     const { message, currency = "CLP", plan } = req.body || {};
-    if (!message) return res.status(400).json({ ok:false, error:"message requerido" });
+    if (!message) return res.status(400).json({ ok: false, error: "message requerido" });
 
+    // Si viene un plan, lo registramos (enviando type si existe)
     let planResult = null;
     if (plan?.amount && plan?.description) {
       planResult = await kyaruPlanExpense({
         description: plan.description,
         amount: Number(plan.amount),
-        currency
+        currency,
+        type: String(plan.type || "OUT").toUpperCase()
       });
     }
 
     const balance = await kyaruGetBalance();
+
     // Respuesta "humana" simple
     let reply = "Te escucho. ";
-    if (planResult?.ok) reply += `Registré ${plan?.amount?.toLocaleString?.("es-CL") ?? plan?.amount} ${currency} para "${plan?.description}". `;
-    if (balance !== null) reply += `Tu saldo estimado ahora es ${balance.toLocaleString("es-CL")} ${currency}.`;
-    else reply += "Por ahora no puedo leer tu balance (falta conectar la hoja de Kyaru).";
+    if (planResult?.ok) {
+      const monto = nfCL.format(Number(plan?.amount || 0));
+      reply += `Registré ${monto} ${currency} para "${plan?.description}". `;
+    }
+    if (typeof balance === "number") {
+      reply += `Tu saldo estimado ahora es ${nfCL.format(balance)} ${currency}.`;
+    } else {
+      reply += "Por ahora no puedo leer tu balance (revisa Kyaru Web App).";
+    }
 
-    res.status(200).json({ ok:true, reply, balance, planResult });
+    res.status(200).json({ ok: true, reply, balance, planResult });
   } catch (e) {
-    res.status(500).json({ ok:false, error:String(e) });
+    res.status(500).json({ ok: false, error: String(e) });
   }
 });
 
-// --- Start ---
+// -------------------- Start --------------------
 app.listen(PORT, () => {
   console.log(`API ready on port ${PORT}`);
 });
-
