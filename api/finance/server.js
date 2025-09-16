@@ -69,3 +69,59 @@ app.get("/api/finance/today", (_req, res) => {
 app.listen(PORT, () => {
   console.log(`API ready on port ${PORT}`);
 });
+// NUEVO: /api/finance/yesterday
+app.get("/api/finance/yesterday", (_req, res) => {
+  res.status(200).json({
+    date: "2025-09-14",
+    timezone: "America/Santiago",
+    generated_at: "2025-09-16T10:05:13Z",
+    markets: [
+      {
+        code: "us",
+        exchanges: [
+          {
+            mic: "XNYS",
+            name: "NYSE",
+            session: {
+              status: "closed",
+              local_time: "2025-09-14T16:01:00-04:00",
+              opens_at: "2025-09-15T09:30:00-04:00",
+              closes_at: "2025-09-15T16:00:00-04:00",
+              is_holiday: false
+            },
+            indices: [
+              { symbol: "^GSPC", name: "S&P 500", price: 5560.02, change: -8.1, change_pct: -0.15, day_range: [5531.0, 5582.7] }
+            ],
+            movers: {
+              top_gainers: [
+                { symbol: "LMN", name: "LMN Corp", price: 18.40, change_pct: 9.2, volume: 12700000 }
+              ],
+              top_losers: [
+                { symbol: "QRS", name: "QRS Inc", price: 7.21, change_pct: -7.9, volume: 9800000 }
+              ],
+              most_active: [
+                { symbol: "AAPL", name: "Apple", price: 227.5, change_pct: 0.6, volume: 60200000 }
+              ]
+            },
+            earnings_today: []
+          }
+        ]
+      }
+    ],
+    fx: [
+      { pair: "USDCLP", price: 942.1, change_pct: -0.12 },
+      { pair: "EURUSD", price: 1.0820, change_pct: -0.08 }
+    ],
+    crypto: [
+      { symbol: "BTC", price: 60810.10, change_pct: -0.20, market: "spot" },
+      { symbol: "ETH", price: 2588.00, change_pct: -0.65, market: "spot" }
+    ],
+    eco_calendar: [
+      { country: "US", event: "CPI (YoY)", time_local: "2025-09-14T08:30:00-04:00", consensus: 3.3, previous: 3.4, importance: "high" }
+    ],
+    news: [
+      { headline: "Cierre mixto en Wall Street", source: "Reuters", published_at: "2025-09-14T21:10:00Z", tickers: ["^GSPC","AAPL","TSLA"] }
+    ],
+    notes: ["Datos simulados del día anterior para pruebas."]
+  });
+});
