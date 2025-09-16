@@ -8,7 +8,7 @@ app.use(express.json());
 // === CONFIG ===
 // Pega aquí tu Web App URL de Google Apps Script cuando la tengas.
 // Si la dejas vacía, igual funcionará en "modo demo" sin registrar en Google.
-const KYARU_WEBAPP_URL = ""; // ej: "https://script.google.com/macros/s/XXXXX/exec"
+const KYARU_WEBAPP_URL = "https://script.google.com/macros/s/AKfycbyOpIdgQV-gutLG_TimogW9pbOHN8U_eS8FwBfFrnRrMkJNf1yL0OtDyHAN5pXfUyZv/exec"; // ej: "https://script.google.com/macros/s/XXXXX/exec"
 
 // --- Salud ---
 app.get("/health", (_req, res) => res.status(200).send("ok"));
@@ -185,3 +185,4 @@ app.post("/api/kyaru/chat", async (req, res) => {
 app.listen(PORT, () => {
   console.log(`API ready on port ${PORT}`);
 });
+
